@@ -1,0 +1,11 @@
+model Server {
+  id               Int                     @id @default(autoincrement())
+  name             String
+  ipAddress        String
+  estado           Boolean                 @default(true)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  typeMeasurements ServerTypeMeasurement[]
+
+  @@map("servers")
+}

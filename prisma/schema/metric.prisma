@@ -1,0 +1,9 @@
+model Metric {
+  id                    Int                     @id @default(autoincrement())
+  identifier            String
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  TypeMeasurementMetric TypeMeasurementMetric[]
+
+  @@map("metrics")
+}

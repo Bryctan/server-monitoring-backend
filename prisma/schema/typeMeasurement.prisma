@@ -1,0 +1,11 @@
+model TypeMeasurement {
+  id      Int                     @id @default(autoincrement())
+  name    String
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  
+  servers ServerTypeMeasurement[]
+  metrics TypeMeasurementMetric[]
+
+  @@map("types_measurements")
+}

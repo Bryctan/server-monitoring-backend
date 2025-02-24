@@ -1,0 +1,12 @@
+model ServerTypeMeasurement {
+  id                Int             @id @default(autoincrement())
+  serverId          Int
+  typeMeasurementId Int
+  server            Server          @relation(fields: [serverId], references: [id])
+  typeMeasurement   TypeMeasurement @relation(fields: [typeMeasurementId], references: [id])
+
+  @@unique([serverId, typeMeasurementId])
+  @@index([serverId], map: "servers_types_measurements_serverId_fkey")
+  @@index([typeMeasurementId], map: "servers_types_measurements_typeMeasurementId_fkey")
+  @@map("servers_types_measurements")
+}

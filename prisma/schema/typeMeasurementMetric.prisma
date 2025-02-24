@@ -1,0 +1,12 @@
+model TypeMeasurementMetric {
+  id                Int             @id @default(autoincrement())
+  typeMeasurementId Int
+  metricId          Int
+  metric            Metric          @relation(fields: [metricId], references: [id])
+  typeMeasurement   TypeMeasurement @relation(fields: [typeMeasurementId], references: [id])
+
+  @@unique([typeMeasurementId, metricId])
+  @@index([metricId], map: "types_measurements_metrics_metricId_fkey")
+  @@index([typeMeasurementId], map: "types_measurements_metrics_typeMeasurementId_fkey")
+  @@map("types_measurements_metrics")
+}
