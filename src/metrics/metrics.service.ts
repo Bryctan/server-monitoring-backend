@@ -6,33 +6,74 @@ export class MetricsService {
   constructor(private readonly serversService: ServersService) {}
 
   async getPrometheusMetrics(serverId: number) {
+    // Buscamos el servidor en la base de datos
     const server = await this.serversService.findOne(serverId);
+    
+    if (!server) {
+      console.error(`Server ${serverId} not found`);
+      return []; // Si no encontramos el servidor, retornamos un array vacío
+    }
 
+    let metricsText = '';
+   
+    
+    try {
+      // Intentamos obtener las métricas del servidor
+      metricsText = await fetch(`http://${server.ipAddress}:9182/metrics`).then(
+        (res) => res.text(),
+      );
 
-    let textplain = {
-      'win-cpu-core-1': '0.1',
-      'win-cpu-core-2': '0.2',
-      'win-cpu-core-3': '0.3',
-      'win-cpu-core-4': '0.4',
-      'win-ram-core-bytes': '5e9+4',
-      'win-ram-capacity': '1bg9d3a',
-      'win-disk-core-gb': '654215sae',
-      "users_capacity": '185',
-    };
+      if (!metricsText) {
+        console.error(`Received empty metrics text for server ${serverId}`);
+        return []; // Si el texto de métricas está vacío, retornamos un array vacío
+      }
+    } catch (err) {
+      console.error(`Error fetching metrics for server ${serverId}:`, err);
+      return []; // Si ocurre un error, retornamos un array vacío
+    }
 
-    return server.typeMeasurements?.map(typeMeasurement => ({
-      name: typeMeasurement.name,
-      metrics: typeMeasurement.metrics?.map(metric => ({
-        identifier: metric.identifier,
-        value: textplain[metric.identifier] || '',
-      })) || [],
-    })) || [];
+    // Convertimos el texto plano de Prometheus a JSON
+    const metricsJson = this.convertToJSON(metricsText);
 
-    //const metrics = fetch(server?.ipAddress + '/metrics').then((res) => res.text());
-    // let metrics = await fetch('http://localhost:3000/servers/1').then((res) =>
-    //   res.json(),
-    // );
+    
+    
 
-    //return metrics;
+    // Construimos el objeto de resultados con los tipos de mediciones y métricas correspondientes
+    const results =
+      server.typeMeasurements?.map((typeMeasurement) => ({
+        name: typeMeasurement.name,
+        metrics:
+          typeMeasurement.metrics?.map((metric) => ({
+            name: metric.name,
+            identifier: metric.identifier,
+            value: metricsJson[metric.identifier] || '', // Si no existe el identificador, retornamos un valor vacío
+          })) || [],
+      })) || [];
+
+    // Retornamos el array con los resultados de las métricas para el servidor
+    return [
+      {
+        server,
+        metrics: results,
+      },
+    ];
+  }
+
+  private convertToJSON(metricsText: string): Record<string, string> {
+    const result: Record<string, string> = {};
+
+    const lines = metricsText.split('\n');
+
+    lines.forEach((line) => {
+      if (line.startsWith('#') || !line.trim()) return;
+
+      const [key, value] = line.split(' ');
+
+      if (key && value) {
+        result[key] = value;
+      }
+    });
+
+    return result;
   }
 }

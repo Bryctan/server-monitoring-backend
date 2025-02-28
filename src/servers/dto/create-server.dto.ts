@@ -4,7 +4,7 @@ export class CreateServerDto {
   @IsString()
   name: string;
 
-  @IsIP()
+  @IsString()
   ipAddress: string;
 
   @IsOptional()
