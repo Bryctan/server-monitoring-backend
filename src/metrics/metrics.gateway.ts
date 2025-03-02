@@ -37,27 +37,16 @@ export class MetricsGateway {
   private async sendMetrics(client: Socket, serverId: number) {
     try {
       const metrics = await this.metricsService.getPrometheusMetrics(serverId);
-
-
-      
-      client.emit('dataMetrics', { server: metrics[0].server, metrics });
+      client.emit('dataMetrics', metrics);
     } catch (error) {
       console.error('Error obteniendo métricas:', error);
     }
-
-
-    
   }
 
-
-  
   private clearClientInterval(clientId: string) {
     if (this.clientIntervals.has(clientId)) {
       clearInterval(this.clientIntervals.get(clientId));
       this.clientIntervals.delete(clientId);
     }
-
-
-    
   }
 }
