@@ -6,7 +6,13 @@ async function seedMetrics() {
   try {
     await prisma.$transaction(async (tx) => {
       await tx.metric.createMany({
-        data: [{ identifier : 'windows_system_system_up_time' }, { identifier : 'windows_cpu_time_total{core="0,0",mode="user"}' }, { identifier : 'windows_logical_disk_free_bytes{volume="C:"}' }, { identifier : 'windows_memory_committed_bytes' }, { identifier : 'windows_terminal_services_session_info' }],
+        data: [
+          { name:"Tiempo encedido", identifier: 'windows_system_system_up_time' },
+          { name:"Tiempo de CPU", identifier: 'windows_cpu_time_total{core="0,0",mode="user"}' },
+          { name:"Espacio libre", identifier: 'windows_logical_disk_free_bytes{volume="C:"}' },
+          { name:"Memoria usada", identifier: 'windows_memory_committed_bytes' },
+          { name:"Usuarios conectados", identifier: 'windows_terminal_services_session_info' },
+        ],
       });
     });
 

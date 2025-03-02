@@ -6,7 +6,13 @@ async function seedTypeMeasurements() {
   try {
     await prisma.$transaction(async (tx) => {
       await tx.typeMeasurement.createMany({
-        data: [{ name: 'Estado del equipo' }, { name: 'CPU' }, { name: 'Partición primaria C' }, { name: 'RAM' }, { name: 'RDP' }],
+        data: [
+          { name: 'Estado del equipo' }, 
+          { name: 'CPU' }, 
+          { name: 'Partición primaria C' }, 
+          { name: 'RAM' }, 
+          { name: 'RDP' }
+        ],
       });
     });
 

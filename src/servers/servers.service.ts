@@ -8,8 +8,8 @@ export class ServersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createServerDto: CreateServerDto) {
-    return await this.prisma.server
-      .create({
+    const server = await this.prisma.$transaction(async (tx) => {
+      return tx.server.create({
         data: {
           ...createServerDto,
           typeMeasurements: {
@@ -20,21 +20,18 @@ export class ServersService {
         },
         include: {
           typeMeasurements: {
-            select: {
-              typeMeasurement: true, // Incluir solo los detalles del tipo de medición
+            include: {
+              typeMeasurement: true,
             },
           },
         },
-      })
-      .then((server) => {
-        // Extraemos solo los objetos de tipo de medición directamente
-        return {
-          server,
-          typeMeasurements: server.typeMeasurements.map(
-            (tm) => tm.typeMeasurement,
-          ),
-        };
       });
+    });
+
+    return {
+      ...server,
+      typeMeasurements: server.typeMeasurements.map((tm) => tm.typeMeasurement),
+    };
   }
 
   async findAll() {
@@ -80,50 +77,44 @@ export class ServersService {
     });
 
     return {
-      id: server?.id,
-      name: server?.name,
-      ipAddress: server?.ipAddress,
-      estado: server?.estado,
-      createdAt: server?.createdAt,
-      updatedAt: server?.updatedAt,
+      ...server,
       typeMeasurements: server?.typeMeasurements.map(({ typeMeasurement }) => ({
-        id: typeMeasurement.id,
-        name: typeMeasurement.name,
-        createdAt: typeMeasurement.createdAt,
-        updatedAt: typeMeasurement.updatedAt,
+        ...typeMeasurement,
         metrics: typeMeasurement.metrics.map(({ metric }) => metric),
       })),
     };
   }
 
   async update(id: number, updateServerDto: UpdateServerDto) {
-    return this.prisma
-      .$transaction([
-        this.prisma.serverTypeMeasurement.deleteMany({
-          where: { serverId: id },
-        }),
-        this.prisma.server.update({
-          where: { id },
-          data: {
-            ...updateServerDto,
-            typeMeasurements: {
-              create: updateServerDto.typeMeasurements?.map(
-                (typeMeasurementId) => ({
-                  typeMeasurementId,
-                }),
-              ),
+    const server = await this.prisma.$transaction([
+      this.prisma.serverTypeMeasurement.deleteMany({
+        where: { serverId: id },
+      }),
+      this.prisma.server.update({
+        where: { id },
+        data: {
+          ...updateServerDto,
+          typeMeasurements: {
+            create: updateServerDto.typeMeasurements?.map((id) => ({
+              typeMeasurementId: id,
+            })),
+          },
+        },
+        include: {
+          typeMeasurements: {
+            include: {
+              typeMeasurement: true,
             },
           },
-          include: {
-            typeMeasurements: {
-              select: {
-                typeMeasurement: true, // Solo devuelve detalles de TypeMeasurement
-              },
-            },
-          },
-        }),
-      ])
-      .then((results) => results[1]);
+        }
+      }),
+      
+    ]);
+
+    return {
+      ...server[1],
+      typeMeasurements: server[1].typeMeasurements.map((tm) => tm.typeMeasurement),
+    }
   }
 
   //Inactivar
